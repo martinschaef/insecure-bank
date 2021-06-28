@@ -24,6 +24,8 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # fetch all history so multiple commits can be scanned
 
       - name: Set up Java
         uses: actions/setup-java@v1
@@ -34,10 +36,11 @@ jobs:
       - name: Compile
         run: mvn -B package -DskipTests
         
-      - name: GitGuardian Shield Action
-        # You may pin to the exact commit or the version.
-        # uses: GitGuardian/gg-shield-action@a5226e0a63850e276df1c71a81129fb82fc6e8cc
-        uses: GitGuardian/gg-shield-action@v1.1.0
-        with:
-          # Arguments to be passed to gg-shield scan
-          args: -v
+      - name: GitGuardian scan
+        uses: GitGuardian/gg-shield-action@master
+        env:
+          GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
+          GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
+          GITHUB_PULL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
